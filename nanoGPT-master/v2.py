@@ -117,6 +117,7 @@ class FeedForward(nn.Module):
 
 class LayerNorm(nn.Module):
     def __init__(self,dim,eps = 1e-5):
+        super().__init__()
         self.eps = eps
         #parameters(trained with backprop)通过反向传播进行训练/更新
         self.gamma = torch.ones(dim)
@@ -124,8 +125,8 @@ class LayerNorm(nn.Module):
 
     def __call__(self,x):
         #calculate the forward pass
-        xmean = x.mean(1,keepdim = True) #batch mean
-        xvar = x.var(1,keepdim = True) #batch variance
+        xmean = x.mean(-1,keepdim = True) #batch mean
+        xvar = x.var(-1,keepdim = True) #batch variance
         xhat = (x-xmean)/torch.sqrt(xvar+self.eps)
         out = self.gamma * xhat + self.beta
         return out
@@ -171,6 +172,7 @@ class BigramLanguageModel(nn.Module):
         #x = self.sa_heads(x)  #apply one head of self-attention. (B,T,C)
         #x = self.ffwd(x)    #(B,T,C)
         x = self.blocks(x)  # (B,T,C)
+        x = self.ln_f(x) # (B,T,C)
         logits = self.lm_head(x) # (B,T,vocab_size)
 
         if targets is None:
